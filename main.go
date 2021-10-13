@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 const (
-	ALPHABET_SIZE = 26
+	AlphabetSize = 26
 )
 
 type trie struct {
@@ -11,7 +11,7 @@ type trie struct {
 }
 
 type node struct {
-	children  [ALPHABET_SIZE]*node
+	children  [AlphabetSize]*node
 	endOfWord bool
 }
 
@@ -68,12 +68,14 @@ func (t *trie) find(word string) bool {
 	return currentNode.endOfWord
 }
 
+// createTrie creates the root trie with an initial node
 func createTrie() *trie {
 	return &trie{
-		root: &node{},
+		root: createNode(),
 	}
 }
 
+// createNode creates and returns a basic node
 func createNode() *node {
 	return &node{
 		endOfWord: false,
