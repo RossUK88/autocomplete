@@ -51,11 +51,10 @@ func (t *trie) suggest(word string) []string {
 		currentNode = currentNode.children[letterIndex]
 	}
 
-	// Check if this is end of word, (Do we need to suggest this? It's already the query?!?)
-
 	// Check if this is an end node (nothing to suggest)
-	isLastNode := currentNode.isLastLeaf()
-	if isLastNode {
+	// We may want to think about if it is end of word too, for example "dog" is end of word
+	// but do we want to suggest "doggy"?
+	if currentNode.isLastLeaf() {
 		return suggestions
 	}
 
@@ -75,6 +74,7 @@ func (t *trie) suggest(word string) []string {
 	return suggestions
 }
 
+// suggestWord will return a string after recursively going through the children of the called on node
 func (n *node) suggestWord(prefix string) string {
 	if n.endOfWord || n.isLastLeaf() {
 		return prefix
@@ -91,6 +91,9 @@ func (n *node) suggestWord(prefix string) string {
 		}
 	}
 
+	// In theory this should never reach here because when you go into a node, it should either be the
+	// end of a word or the last node (also should be end of word), so we should never not return
+	// something from the for loop
 	return ""
 }
 
