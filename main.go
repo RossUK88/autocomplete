@@ -18,11 +18,80 @@ type node struct {
 func main() {
 	trie := createTrie()
 
-	trie.insert("dog")
+	// TODO When this runs we need to popualte this from a Source
+	trie.insert("dos")
+	trie.insert("doggy")
+	trie.insert("domination")
 
-	fmt.Println("Is Ross in the Trie? ", trie.find("ross"))
-	fmt.Println("Is Dog in the Trie? ", trie.find("dog"))
-	fmt.Println("Is Do in the Trie? ", trie.find("do"))
+	// TODO Turn this into a HTTP server to get suggestions based off a query string
+	dogSuggestions := trie.suggest("do")
+	fmt.Println("Printing Suggestions for 'do'")
+	for _, s := range dogSuggestions {
+		fmt.Println(s)
+	}
+
+}
+
+func (t *trie) suggest(word string) []string {
+	var suggestions []string
+	wordLength := len(word)
+
+	currentNode := t.root
+	var prefix string
+
+	for i := 0; i < wordLength; i++ {
+		letterIndex := word[i] - 'a'
+		prefix = fmt.Sprintf("%s%s", prefix, string(word[i]))
+
+		// We have a Word that is not in the Trie, return an empty suggestions slice.
+		if currentNode.children[letterIndex] == nil {
+			return suggestions
+		}
+
+		currentNode = currentNode.children[letterIndex]
+	}
+
+	// Check if this is end of word, (Do we need to suggest this? It's already the query?!?)
+
+	// Check if this is an end node (nothing to suggest)
+	isLastNode := currentNode.isLastLeaf()
+	if isLastNode {
+		return suggestions
+	}
+
+	// We need to Recursively get the children of this node, and add them to suggestions.
+	// We probably need to think about Limits, Getting Popular items (total searches?!) and goroutines.
+	// I can see this getting out of hand for smaller queries with a lot of words
+	for i := 0; i < AlphabetSize; i++ {
+		tmpWord := fmt.Sprintf("%s%s", prefix, string(i+'a'))
+		if currentNode.children[i] != nil {
+			w := currentNode.children[i].suggestWord(tmpWord)
+			if w != "" {
+				suggestions = append(suggestions, w)
+			}
+		}
+	}
+
+	return suggestions
+}
+
+func (n *node) suggestWord(prefix string) string {
+	if n.endOfWord || n.isLastLeaf() {
+		return prefix
+	}
+
+	// For each child node we need to recursively call this method
+	for i := 0; i < AlphabetSize; i++ {
+		if n.children[i] != nil {
+			prefix = fmt.Sprintf("%s%s", prefix, string(i+'a'))
+			w := n.children[i].suggestWord(prefix)
+			if w != "" {
+				return w
+			}
+		}
+	}
+
+	return ""
 }
 
 // insert takes a string and adds it to the root trie
@@ -66,6 +135,17 @@ func (t *trie) find(word string) bool {
 	}
 
 	return currentNode.endOfWord
+}
+
+// isLastLeaf will loop through all the children nodes and return based on if there is atleast one node
+func (n *node) isLastLeaf() bool {
+	for i := 0; i < AlphabetSize; i++ {
+		if n.children[i] != nil {
+			return false
+		}
+	}
+
+	return true
 }
 
 // createTrie creates the root trie with an initial node
